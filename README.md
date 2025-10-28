@@ -1,4 +1,4 @@
-# **Small Business Accounting & Compliance Tool (UK)**
+# **SMEs Business Accounting & Compliance Tool (UK)**
 
 This is a comprehensive, all-in-one accounting and financial reporting tool built from scratch for UK small/micro limited companies. It's a single-file web application that runs entirely in the browser, requiring no backend or databases.
 
