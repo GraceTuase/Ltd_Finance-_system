@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Small Business Accounting (Ltd) - Classic</title>
+    <!-- We are removing Tailwind and using simple, built-in styles for reliability -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- NEW CLASSIC STYLING --- */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --header-blue: #000080; /* Navy */
+            --report-blue: #0000CD; /* Medium Blue */
+            --action-green: #008000; /* Green */
+            --action-purple: #800080; /* Purple */
+            --danger-red: #D22B2B;   /* Fire Red */
+            --bg-white: #ffffff;
+            --bg-light-gray: #f9f9f9;
+            --border-color: #dddddd;
+            --text-dark: #333333;
+            --text-light: #ffffff;
+            --text-gray: #555555;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-white);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            overscroll-behavior: none;
+        }
+
+        /* --- Layout --- */
+        .top-bar {
+            background-color: var(--bg-white);
+            padding: 1rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .tab-nav {
+            background-color: #333; /* Dark background for tabs */
+            padding: 0.5rem 1rem;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        main {
+            padding: 1.5rem;
+        }
+        .tab-content {
+            display: none; /* Hidden by default */
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-container {
+            background: var(--bg-white);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        .table-container {
+            background: var(--bg-white);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow-x: auto;
+        }
+        .flex-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        /* --- Responsive --- */
+        @media (min-width: 768px) {
+            .top-bar {
+                flex-direction: row;
+            }
+        }
+        @media (min-width: 1024px) {
+            .flex-container {
+                flex-direction: row;
+            }
+            .flex-container > .form-container {
+                flex: 1; /* Takes 1/3 */
+            }
+            .flex-container > .table-container {
+                flex: 2; /* Takes 2/3 */
+            }
+        }
+
+        /* --- Components --- */
+        h1 { font-size: 1.75rem; font-weight: 700; color: var(--header-blue); }
+        h2 { font-size: 1.5rem; font-weight: 600; color: var(--text-dark); margin-bottom: 1rem; }
+        h3 { font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin-bottom: 1.5rem; }
+
+        .tab-btn {
+            font-family: 'Inter', sans-serif;
+            background-color: transparent;
+            color: var(--text-light);
+            border: 0;
+            border-bottom: 3px solid transparent;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .tab-btn:hover {
+            background-color: #555;
+        }
+        .tab-btn.active {
+            background-color: var(--bg-white);
+            color: var(--header-blue);
+            border-bottom: 3px solid var(--header-blue);
+        }
+        .tab-btn i {
+            margin-right: 8px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-gray);
+            margin-bottom: 0.5rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box; /* Important */
+        }
+        
+        /* Modified form-input style for profile manager */
+        .form-input-small {
+            padding: 0.6rem;
+            font-size: 0.9rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+
+        .btn {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-light);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn i { margin-right: 8px; }
+        
+        .btn-primary { background-color: var(--header-blue); }
+        .btn-primary:hover { background-color: #0000B0; }
+        
+        .btn-green { background-color: var(--action-green); }
+        .btn-green:hover { background-color: #006400; }
+        
+        .btn-purple { background-color: var(--action-purple); }
+        .btn-purple:hover { background-color: #6A0DAD; }
+
+        .btn-gray { background-color: #666; }
+        .btn-gray:hover { background-color: #444; }
+
+        .import-export-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .import-btn-label {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: var(--action-purple);
+            text-align: center;
+        }
+        .import-btn-label:hover { background-color: #6A0DAD; }
+        .import-btn-label input[type="file"] { display: none; }
+
+        .btn-small {
+            width: auto;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        .data-table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .data-table th, .data-table td {
+            padding: 0.85rem;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+        /* --- THIS IS THE KEY CHANGE --- */
+        .data-table th {
+            background-color: var(--header-blue);
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        .data-table tbody tr:hover {
+            background-color: var(--bg-light-gray);
+        }
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger-red);
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .delete-btn:hover { color: #A00000; }
+
+        /* --- Dashboard --- */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+        .kpi-card {
+            background-color: var(--bg-white);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--header-blue);
+            padding: 1.25rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .kpi-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-gray);
+            text-transform: uppercase;
+        }
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-top: 0.5rem;
+        }
+        /* Special KPI Colors */
+        .kpi-card.kpi-profit { border-left-color: var(--action-green); }
+        .kpi-card.kpi-profit .kpi-value.positive { color: var(--action-green); }
+        .kpi-card.kpi-profit .kpi-value.negative { color: var(--danger-red); }
+        .kpi-card.kpi-liability { border-left-color: #F59E0B; } /* Amber */
+        .kpi-card.kpi-overdue { border-left-color: var(--danger-red); }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        @media (min-width: 1024px) {
+            .chart-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        .chart-container {
+            background-color: var(--bg-white);
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* --- Reports (P&L, Balance Sheet) --- */
+        .report-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--bg-white);
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--header-blue);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .report-date {
+            color: var(--text-gray);
+            font-style: italic;
+            margin-bottom: 1.5rem;
+        }
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem;
+        }
+        .report-table th, .report-table td {
+            padding: 0.85rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .report-table .section-header {
+            background-color: var(--report-blue);
+            color: var(--text-light);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        .report-table .section-header.sub-item {
+            background-color: #4169E1; /* Royal Blue */
+        }
+        .report-table .sub-item {
+            padding-left: 2rem;
+        }
+        .report-table .total-row {
+            font-weight: 700;
+            background-color: var(--bg-light-gray);
+            border-top: 2px solid #ccc;
+        }
+        .report-table .grand-total {
+            font-weight: 800;
+            font-size: 1.1rem;
+            background-color: #E6E6FA; /* Lavender */
+            border-top: 3px solid var(--report-blue);
+        }
+        .balancing-check-ok {
+            background-color: #DFFFDF; /* Light Green */
+            color: #006400; /* Dark Green */
+            text-align: center;
+            font-weight: 700;
+            padding: 1rem;
+        }
+        .balancing-check-fail {
+            background-color: #FFD2D2; /* Light Red */
+            color: var(--danger-red);
+            text-align: center;
+            font-weight: 700;
+            padding: 1rem;
+        }
+        .status-pending { color: #F59E0B; font-weight: 600; }
+        .status-paid { color: var(--action-green); font-weight: 600; }
+        .status-overdue { color: var(--danger-red); font-weight: 600; }
+        .text-green { color: var(--action-green); }
+        .text-red { color: var(--danger-red); }
+
+        /* --- Profile Manager --- */
+        .profile-manager {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .profile-manager-inputs {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        /* Removed fixed widths, using form-input-small */
+        #currentProfile {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-gray);
+        }
+
+        @media (min-width: 768px) {
+            .profile-manager {
+                flex-direction: row;
+                gap: 1rem;
+                margin-top: 0;
+            }
+        }
+        
+        /* --- Print Styles --- */
+        @media print {
+            body, html { font-size: 10pt; }
+            .no-print, .no-print * { display: none !important; }
+            .print-container {
+                padding: 0; margin: 0; box-shadow: none; border: none; width: 100%; max-width: 100%;
+            }
+            .print-title {
+                display: block !important; text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px;
+            }
+            table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+            th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+            table, tr, td, th { page-break-inside: avoid !important; }
+            h2 { font-size: 14pt; page-break-after: avoid; page-break-inside: avoid; }
+            
+            .report-table .section-header {
+                background-color: var(--report-blue) !important;
+                color: var(--text-light) !important;
+                font-weight: bold;
+            }
+            .report-table .section-header.sub-item {
+                background-color: #4169E1 !important;
+            }
+            .report-table .total-row {
+                font-weight: bold; background-color: var(--bg-light-gray) !important; border-top: 2px solid #ccc !important;
+            }
+            .report-table .grand-total {
+                font-weight: 800; font-size: 1.1rem; background-color: #E6E6FA !important; border-top: 3px solid var(--report-blue) !important;
+            }
+            .text-green { color: var(--action-green) !important; }
+            .text-red { color: var(--danger-red) !important; }
+            .balancing-check-ok { background-color: #DFFFDF !important; color: #006400 !important; }
+            .balancing-check-fail { background-color: #FFD2D2 !important; color: var(--danger-red) !important; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Top Bar -->
+    <div class="top-bar no-print">
+        <h1>Small Business Accounting (Ltd)</h1>
+        
+        <!-- NEW Profile Manager -->
+        <div class="profile-manager">
+            <div class="profile-manager-inputs">
+                <select id="profileSelector" class="form-input-small" style="min-width: 200px;"></select>
+                <input type="text" id="newProfileInput" placeholder="New Profile Name" class="form-input-small" style="min-width: 200px; display: none;">
+                <button id="loadProfileBtn" class="btn btn-primary btn-small">
+                    <i class="fas fa-folder-open"></i> Load Profile
+                </button>
+            </div>
+            <span id="currentProfile">No profile loaded.</span>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="tab-nav no-print">
+        <nav id="tab-nav">
+            <button class="tab-btn active" data-tab="dashboard"><i class="fas fa-tachometer-alt"></i>Dashboard</button>
+            <button class="tab-btn" data-tab="transactions"><i class="fas fa-exchange-alt"></i>Transactions</button>
+            <button class="tab-btn" data-tab="budgeting"><i class="fas fa-calculator"></i>Budgeting</button>
+            <button class="tab-btn" data-tab="customers"><i class="fas fa-users"></i>Customers</button>
+            <button class="tab-btn" data-tab="invoices"><i class="fas fa-file-invoice-dollar"></i>Invoices</button>
+            <button class="tab-btn" data-tab="assets"><i class="fas fa-laptop-house"></i>Assets</button>
+            <button class="tab-btn" data-tab="liabilities"><i class="fas fa-bank"></i>Liabilities/Equity</button>
+            <button class="tab-btn" data-tab="pl_statement"><i class="fas fa-file-alt"></i>P&L Statement</button>
+            <button class="tab-btn" data-tab="balance_sheet"><i class="fas fa-balance-scale"></i>Balance Sheet</button>
+            <button class="tab-btn" data-tab="year_end_summary"><i class="fas fa-clipboard-list"></i>Year-End Summary</button>
+            <button class="tab-btn" data-tab="comparative_reports"><i class="fas fa-chart-line"></i>Comparative Reports</button>
+        </nav>
+    </div>
+
+    <!-- Main Content Area -->
+    <main>
+        
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active print-container">
+            <div class="kpi-grid">
+                <!-- KPIs -->
+                <div class="kpi-card"><h3 class="kpi-title">Total Revenue</h3><p id="kpi-total-revenue" class="kpi-value">£0.00</p></div>
+                <div class="kpi-card"><h3 class="kpi-title">Total OpEx</h3><p id="kpi-total-opex" class="kpi-value">£0.00</p></div>
+                <div class="kpi-card kpi-profit"><h3 class="kpi-title">Net Profit</h3><p id="kpi-net-profit" class="kpi-value">£0.00</p></div>
+                <div class="kpi-card"><h3 class="kpi-title">Cash at Bank</h3><p id="kpi-cash-at-bank" class="kpi-value">£0.00</p></div>
+                <div class="kpi-card kpi-liability"><h3 class="kpi-title">VAT Due to HMRC</h3><p id="kpi-vat-due" class="kpi-value">£0.00</p></div>
+                <div class="kpi-card kpi-liability"><h3 class="kpi-title">Accounts Receivable</h3><p id="kpi-accounts-receivable" class="kpi-value">£0.00</p></div>
+                <div class="kpi-card kpi-overdue"><h3 class="kpi-title">Overdue Invoices</h3><p id="kpi-overdue-invoices" class="kpi-value">£0.00</p></div>
+                <div class="kpi-card"><h3 class="kpi-title">Total Assets</h3><p id="kpi-total-assets" class="kpi-value">£0.00</p></div>
+            </div>
+
+            <!-- Charts -->
+            <div class="chart-grid">
+                <div class="chart-container">
+                    <h3>Budget vs. Actual</h3>
+                    <canvas id="budgetChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Revenue Sources</h3>
+                    <canvas id="revenueChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Operating Expenses</h3>
+                    <canvas id="opexChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>Invoice Status</h3>
+                    <div id="invoice-status-list">
+                        <!-- Invoice status will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Tab -->
+        <div id="transactions" class="tab-content">
+            <div class="flex-container">
+                <!-- Transaction Entry Form -->
+                <div class="form-container">
+                    <h3>Log New Transaction</h3>
+                    <form id="transaction-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label for="transaction-date" class="form-label">Date</label>
+                            <input type="date" id="transaction-date" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="transaction-type" class="form-label">Type</label>
+                            <select id="transaction-type" class="form-input" required>
+                                <option value="Income">Income</option>
+                                <option value="Expense">Expense</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="transaction-category" class="form-label">Category</label>
+                            <select id="transaction-category" class="form-input" required>
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="transaction-description" class="form-label">Description / Invoice #</label>
+                            <input type="text" id="transaction-description" class="form-input" placeholder="e.g., Client X Invoice #001">
+                        </div>
+                        <div>
+                            <label for="transaction-amount" class="form-label">Total Amount (£)</label>
+                            <input type="number" id="transaction-amount" class="form-input" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div>
+                            <label for="transaction-vat" class="form-label">VAT Rate (%)</label>
+                            <select id="transaction-vat" class="form-input">
+                                <option value="0">0% (Exempt/Zero-Rated)</option>
+                                <option value="5">5% (Reduced Rate)</option>
+                                <option value="20">20% (Standard Rate)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Log Transaction
+                        </button>
+                    </form>
+                    <div class="import-export-container">
+                        <button id="exportTransactions" class="btn btn-green btn-small" style="width: 50%;"><i class="fas fa-file-csv"></i>Export to CSV</button>
+                        <label class="import-btn-label" style="width: 50%;">
+                            <i class="fas fa-file-upload"></i>Import CSV
+                            <input type="file" id="importTransactions" class="hidden" accept=".csv">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Transaction Log Table -->
+                <div class="table-container">
+                    <h3>Transaction Log</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Net</th>
+                                <th>VAT</th>
+                                <th>Total</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-log-body">
+                            <!-- Log entries will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budgeting Tab -->
+        <div id="budgeting" class="tab-content">
+            <div class="flex-container">
+                <!-- Budget Entry Form -->
+                <div class="form-container">
+                    <h3>Set Annual Budget</h3>
+                    <form id="budget-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label for="budget-category" class="form-label">Category</label>
+                            <select id="budget-category" class="form-input" required>
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="budget-amount" class="form-label">Annual Budget Amount (£)</label>
+                            <input type="number" id="budget-amount" class="form-input" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>Set Budget
+                        </button>
+                    </form>
+                    <div class="import-export-container">
+                        <button id="exportBudgets" class="btn btn-green btn-small" style="width: 50%;"><i class="fas fa-file-csv"></i>Export to CSV</button>
+                        <label class="import-btn-label" style="width: 50%;">
+                            <i class="fas fa-file-upload"></i>Import CSV
+                            <input type="file" id="importBudgets" class="hidden" accept=".csv">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Budget Table -->
+                <div class="table-container">
+                    <h3>Budget Overview</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Type</th>
+                                <th>Annual Budget</th>
+                                <th>Actual Spend/Income</th>
+                                <th>Variance</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="budget-table-body">
+                            <!-- Budget entries will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Customers Tab -->
+        <div id="customers" class="tab-content">
+            <div class="flex-container">
+                <!-- Customer Entry Form -->
+                <div class="form-container">
+                    <h3>Add New Customer</h3>
+                    <form id="customer-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label for="customer-name" class="form-label">Customer Name</label>
+                            <input type="text" id="customer-name" class="form-input" placeholder="e.g., Acme Ltd" required>
+                        </div>
+                        <div>
+                            <label for="customer-email" class="form-label">Contact Email</label>
+                            <input type="email" id="customer-email" class="form-input" placeholder="contact@acme.ltd">
+                        </div>
+                        <div>
+                            <label for="customer-phone" class="form-label">Contact Phone</label>
+                            <input type="tel" id="customer-phone" class="form-input" placeholder="01234 567890">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i>Add Customer
+                        </button>
+                    </form>
+                    <div class="import-export-container">
+                        <button id="exportCustomers" class="btn btn-green btn-small" style="width: 50%;"><i class="fas fa-file-csv"></i>Export to CSV</button>
+                        <label class="import-btn-label" style="width: 50%;">
+                            <i class="fas fa-file-upload"></i>Import CSV
+                            <input type="file" id="importCustomers" class="hidden" accept=".csv">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Customer Table -->
+                <div class="table-container">
+                    <h3>Customer List</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Customer Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Total Billed</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customer-table-body">
+                            <!-- Customer entries will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices Tab -->
+        <div id="invoices" class="tab-content">
+            <div class="flex-container">
+                <!-- Invoice Entry Form -->
+                <div class="form-container">
+                    <h3>Create New Invoice</h3>
+                    <form id="invoice-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label for="invoice-customer" class="form-label">Customer</label>
+                            <select id="invoice-customer" class="form-input" required>
+                                <option value="">-- Select Customer --</option>
+                                <!-- Customers populated by JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="invoice-number" class="form-label">Invoice Number</label>
+                            <input type="text" id="invoice-number" class="form-input" placeholder="e.g., INV-001" required>
+                        </div>
+                        <div>
+                            <label for="invoice-date" class="form-label">Date Issued</label>
+                            <input type="date" id="invoice-date" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="invoice-due-date" class="form-label">Date Due</label>
+                            <input type="date" id="invoice-due-date" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="invoice-amount" class="form-label">Amount (Total £)</label>
+                            <input type="number" id="invoice-amount" class="form-input" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <div>
+                            <label for="invoice-status" class="form-label">Status</label>
+                            <select id="invoice-status" class="form-input" required>
+                                <option value="Pending">Pending</option>
+                                <option value="Paid">Paid</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Create Invoice
+                        </button>
+                    </form>
+                    <div class="import-export-container">
+                        <button id="exportInvoices" class="btn btn-green btn-small" style="width: 50%;"><i class="fas fa-file-csv"></i>Export to CSV</button>
+                        <label class="import-btn-label" style="width: 50%;">
+                            <i class="fas fa-file-upload"></i>Import CSV
+                            <input type="file" id="importInvoices" class="hidden" accept=".csv">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Invoice Table -->
+                <div class="table-container">
+                    <h3>Invoice Tracker</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Date Issued</th>
+                                <th>Date Due</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invoice-table-body">
+                            <!-- Invoice entries will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assets Tab -->
+        <div id="assets" class="tab-content">
+            <div class="flex-container">
+                <!-- Asset Entry Form -->
+                <div class="form-container">
+                    <h3>Log New Asset</h3>
+                    <form id="asset-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label for="asset-name" class="form-label">Asset Name</label>
+                            <input type="text" id="asset-name" class="form-input" placeholder="e.g., MacBook Pro" required>
+                        </div>
+                        <div>
+                            <label for="asset-type" class="form-label">Asset Type</label>
+                            <select id="asset-type" class="form-input" required>
+                                <option value="Fixed Asset">Fixed Asset (e.g., Laptop, Desk)</option>
+                                <option value="Stock">Stock / Inventory</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="asset-date" class="form-label">Date Acquired</label>
+                            <input type="date" id="asset-date" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="asset-value" class="form-label">Value (£)</label>
+                            <input type="number" id="asset-value" class="form-input" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Log Asset
+                        </button>
+                    </form>
+                    <div class="import-export-container">
+                        <button id="exportAssets" class="btn btn-green btn-small" style="width: 50%;"><i class="fas fa-file-csv"></i>Export to CSV</button>
+                        <label class="import-btn-label" style="width: 50%;">
+                            <i class="fas fa-file-upload"></i>Import CSV
+                            <input type="file" id="importAssets" class="hidden" accept=".csv">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Asset Table -->
+                <div class="table-container">
+                    <h3>Asset Register</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Asset Name</th>
+                                <th>Type</th>
+                                <th>Date Acquired</th>
+                                <th>Value</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="asset-table-body">
+                            <!-- Asset entries will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liabilities & Equity Tab -->
+        <div id="liabilities" class="tab-content">
+            <div class="flex-container">
+                <!-- Liability/Equity Entry Form -->
+                <div class="form-container">
+                    <h3>Log Liability or Equity</h3>
+                    <form id="liability-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label for="liability-name" class="form-label">Name</label>
+                            <input type="text" id="liability-name" class="form-input" placeholder="e.g., Bank Loan, Share Capital" required>
+                        </div>
+                        <div>
+                            <label for="liability-type" class="form-label">Type</label>
+                            <select id="liability-type" class="form-input" required>
+                                <option value="Liability">Liability (e.g., Loan)</option>
+                                <option value="Equity">Equity (e.g., Share Capital)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="liability-date" class="form-label">Date</label>
+                            <input type="date" id="liability-date" class="form-input" required>
+                        </div>
+                        <div>
+                            <label for="liability-amount" class="form-label">Amount (£)</label>
+                            <input type="number" id="liability-amount" class="form-input" placeholder="0.00" step="0.01" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i>Log Item
+                        </button>
+                    </form>
+                    <div class="import-export-container">
+                        <button id="exportLiabilities" class="btn btn-green btn-small" style="width: 50%;"><i class="fas fa-file-csv"></i>Export to CSV</button>
+                        <label class="import-btn-label" style="width: 50%;">
+                            <i class="fas fa-file-upload"></i>Import CSV
+                            <input type="file" id="importLiabilities" class="hidden" accept=".csv">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Liability/Equity Table -->
+                <div class="table-container">
+                    <h3>Liabilities & Equity Register</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="liability-table-body">
+                            <!-- Liability/Equity entries will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- P&L Statement Tab -->
+        <div id="pl_statement" class="tab-content print-container">
+            <div class="report-container">
+                <div class="report-header no-print">
+                    <h2>Profit & Loss Statement</h2>
+                    <button id="printPL" class="btn btn-gray btn-small"><i class="fas fa-print"></i>Print to PDF</button>
+                </div>
+                <div class="print-title" style="display: none;">Profit & Loss Statement</div>
+                <p class="report-date" id="pl-date-range">For the period: (All Time)</p>
+
+                <!-- P&L Table -->
+                <table class="report-table">
+                    <tbody id="pl-table-body">
+                        <!-- P&L data will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Balance Sheet Tab -->
+        <div id="balance_sheet" class="tab-content print-container">
+            <div class="report-container">
+                <div class="report-header no-print">
+                    <h2>Balance Sheet</h2>
+                    <button id="printBalanceSheet" class="btn btn-gray btn-small"><i class="fas fa-print"></i>Print to PDF</button>
+                </div>
+                <div class="print-title" style="display: none;">Balance Sheet</div>
+                <p class="report-date" id="balance-sheet-date">As at: (Today)</p>
+
+                <!-- Balance Sheet Table -->
+                <table class="report-table">
+                    <tbody id="balance-sheet-body">
+                        <!-- Balance Sheet data will be populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Year-End Summary Tab -->
+        <div id="year_end_summary" class="tab-content print-container">
+            <div class="report-container">
+                <div class="report-header no-print">
+                    <h2>Year-End Summary</h2>
+                    <button id="printSummary" class="btn btn-gray btn-small"><i class="fas fa-print"></i>Print to PDF</button>
+                </div>
+                <div class="print-title" style="display: none;">Year-End Summary</div>
+                <p class="report-date" id="summary-date-range">For the period: (All Time)</p>
+
+                <!-- Key Metrics -->
+                <div class="kpi-grid">
+                    <div class="kpi-card kpi-profit"><h3 class="kpi-title">Net Profit</h3><p id="summary-net-profit" class="kpi-value">£0.00</p></div>
+                    <div class="kpi-card"><h3 class="kpi-title">Cash at Bank</h3><p id="summary-cash-at-bank" class="kpi-value">£0.00</p></div>
+                    <div class="kpi-card"><h3 class="kpi-title">Total Revenue</h3><p id="summary-total-revenue" class="kpi-value">£0.00</p></div>
+                    <div class="kpi-card"><h3 class="kpi-title">Total OpEx</h3><p id="summary-total-opex" class="kpi-value">£0.00</p></div>
+                    <div class="kpi-card kpi-liability"><h3 class="kpi-title">Total VAT Paid (Input)</h3><p id="summary-vat-paid" class="kpi-value">£0.00</p></div>
+                    <div class="kpi-card kpi-liability"><h3 class="kpi-title">Total VAT Received (Output)</h3><p id="summary-vat-received" class="kpi-value">£0.00</p></div>
+                </div>
+
+                <!-- Accounts Receivable -->
+                <h3 style="margin-top: 2rem;">Accounts Receivable (Unpaid Invoices)</h3>
+                <div class="table-container" style="padding: 0; border: none; box-shadow: none;">
+                    <table class="data-table" style="min-width: 0;">
+                        <thead>
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Customer</th>
+                                <th>Date Due</th>
+                                <th>Amount Owed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-ar-body">
+                            <!-- A/R data will be populated by JS -->
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight: bold; background-color: var(--bg-light-gray);">
+                                <td colspan="3" style="text-align: right; padding: 0.85rem;">Total Accounts Receivable:</td>
+                                <td id="summary-total-ar" style="padding: 0.85rem;">£0.00</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Comparative Reports Tab -->
+        <div id="comparative_reports" class="tab-content">
+            <div class="flex-container">
+                <!-- Snapshot Form -->
+                <div class="form-container">
+                    <h3>Save Year-End Financials</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-gray); margin-bottom: 1rem;">
+                        Use this tool at the end of your financial year. It will "snapshot" your key P&L and Balance Sheet figures and save them for comparison.
+                    </p>
+                    <form id="snapshot-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div>
+                            <label for="snapshot-year" class="form-label">Financial Year</label>
+                            <input type="text" id="snapshot-year" class="form-input" placeholder="e.g., 2024-2025" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-camera"></i>Save Year-End Snapshot
+                        </button>
+                    </form>
+                </div>
+        
+                <!-- Comparative Report Table -->
+                <div class="table-container">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Comparative Financial Positions</h3>
+                        <button id="exportComparative" class="btn btn-green btn-small"><i class="fas fa-file-csv"></i>Export to CSV</button>
+                    </div>
+                    <table class="data-table" style="min-width: 1000px;"> <!-- Wider table for more columns -->
+                        <thead>
+                            <tr>
+                                <th>Financial Year</th>
+                                <th>Total Revenue</th>
+                                <th>Net Profit</th>
+                                <th>Cash at Bank</th>
+                                <th>Total Assets</th>
+                                <th>Total Liabilities</th>
+                                <th>Total Equity</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparative-table-body">
+                            <!-- Comparative data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- STATE MANAGEMENT ---
+            let db = {
+                transactions: [],
+                budgets: {},
+                customers: [],
+                invoices: [],
+                assets: [],
+                liabilities: [], // This will store both liabilities and equity
+                comparativeReports: [] // NEW: To store snapshots
+            };
+            let currentProfile = null;
+            let budgetChart, revenueChart, opexChart;
+
+            const CATEGORIES = {
+                Income: [
+                    'Sales Revenue',
+                    'Consulting Fees',
+                    'Interest Income',
+                    'Other Income'
+                ],
+                Expense: [
+                    'Cost of Goods Sold (COGS)',
+                    'Salaries & Wages',
+                    'Rent & Utilities',
+                    'Marketing & Advertising',
+                    'Software & Subscriptions',
+                    'Office Supplies',
+                    'Travel & Entertainment',
+                    'Bank Fees',
+                    'Other Expenses'
+                ]
+            };
+
+            const PNL_STRUCTURE = {
+                'Revenue': ['Sales Revenue', 'Consulting Fees', 'Other Income'],
+                'Cost of Goods Sold (COGS)': ['Cost of Goods Sold (COGS)'],
+                'Operating Expenses': [
+                    'Salaries & Wages',
+                    'Rent & Utilities',
+                    'Marketing & Advertising',
+                    'Software & Subscriptions',
+                    'Office Supplies',
+                    'Travel & Entertainment',
+                    'Bank Fees',
+                    'Other Expenses'
+                ],
+                'Other Income/Expense': ['Interest Income']
+            };
+
+
+            // --- UI ELEMENT SELECTORS ---
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const loadProfileBtn = document.getElementById('loadProfileBtn');
+            const currentProfileSpan = document.getElementById('currentProfile');
+            const profileSelector = document.getElementById('profileSelector'); // NEW
+            const newProfileInput = document.getElementById('newProfileInput'); // NEW
+
+            // Form selectors
+            const transactionForm = document.getElementById('transaction-form');
+            const budgetForm = document.getElementById('budget-form');
+            const customerForm = document.getElementById('customer-form');
+            const invoiceForm = document.getElementById('invoice-form');
+            const assetForm = document.getElementById('asset-form');
+            const liabilityForm = document.getElementById('liability-form');
+            const snapshotForm = document.getElementById('snapshot-form'); // NEW
+
+            // Table body selectors
+            const transactionLogBody = document.getElementById('transaction-log-body');
+            const budgetTableBody = document.getElementById('budget-table-body');
+            const customerTableBody = document.getElementById('customer-table-body');
+            const invoiceTableBody = document.getElementById('invoice-table-body');
+            const assetTableBody = document.getElementById('asset-table-body');
+            const liabilityTableBody = document.getElementById('liability-table-body');
+            const comparativeTableBody = document.getElementById('comparative-table-body'); // NEW
+
+            // Category dropdowns
+            const transactionTypeSelect = document.getElementById('transaction-type');
+            const transactionCategorySelect = document.getElementById('transaction-category');
+            const budgetCategorySelect = document.getElementById('budget-category');
+            const invoiceCustomerSelect = document.getElementById('invoice-customer');
+
+            // KPI selectors
+            const kpiTotalRevenue = document.getElementById('kpi-total-revenue');
+            const kpiTotalOpex = document.getElementById('kpi-total-opex');
+            const kpiNetProfit = document.getElementById('kpi-net-profit');
+            const kpiCashAtBank = document.getElementById('kpi-cash-at-bank');
+            const kpiVatDue = document.getElementById('kpi-vat-due');
+            const kpiAccountsReceivable = document.getElementById('kpi-accounts-receivable');
+            const kpiOverdueInvoices = document.getElementById('kpi-overdue-invoices');
+            const kpiTotalAssets = document.getElementById('kpi-total-assets');
+
+            // Report selectors
+            const plTableBody = document.getElementById('pl-table-body');
+            const balanceSheetBody = document.getElementById('balance-sheet-body');
+            const summaryNetProfit = document.getElementById('summary-net-profit');
+            const summaryCashAtBank = document.getElementById('summary-cash-at-bank');
+            const summaryTotalRevenue = document.getElementById('summary-total-revenue');
+            const summaryTotalOpex = document.getElementById('summary-total-opex');
+            const summaryVatPaid = document.getElementById('summary-vat-paid');
+            const summaryVatReceived = document.getElementById('summary-vat-received');
+            const summaryArBody = document.getElementById('summary-ar-body');
+            const summaryTotalAr = document.getElementById('summary-total-ar');
+
+            // Print buttons
+            const printPLBtn = document.getElementById('printPL');
+            const printBalanceSheetBtn = document.getElementById('printBalanceSheet');
+            const printSummaryBtn = document.getElementById('printSummary');
+
+            // Import/Export buttons
+            const exportTransactionsBtn = document.getElementById('exportTransactions');
+            const importTransactionsBtn = document.getElementById('importTransactions');
+            const exportBudgetsBtn = document.getElementById('exportBudgets');
+            const importBudgetsBtn = document.getElementById('importBudgets');
+            const exportCustomersBtn = document.getElementById('exportCustomers');
+            const importCustomersBtn = document.getElementById('importCustomers');
+            const exportInvoicesBtn = document.getElementById('exportInvoices');
+            const importInvoicesBtn = document.getElementById('importInvoices');
+            const exportAssetsBtn = document.getElementById('exportAssets');
+            const importAssetsBtn = document.getElementById('importAssets');
+            const exportLiabilitiesBtn = document.getElementById('exportLiabilities');
+            const importLiabilitiesBtn = document.getElementById('importLiabilities');
+            const exportComparativeBtn = document.getElementById('exportComparative'); // NEW
+
+
+            // --- UTILITY FUNCTIONS ---
+            const formatCurrency = (amount) => `£${(amount || 0).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '';
+                return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB');
+            }
+
+            // --- PROFILE & DATA MANAGEMENT ---
+            loadProfileBtn.addEventListener('click', () => {
+                const selectedProfile = profileSelector.value;
+                let profileName = '';
+
+                if (selectedProfile === 'new') {
+                    profileName = newProfileInput.value.trim();
+                    if (!profileName) {
+                        alert('Please enter a name for the new profile.');
+                        return;
+                    }
+                } else {
+                    profileName = selectedProfile;
+                }
+
+                if (!profileName) {
+                    alert('Please select or create a profile.');
+                    return;
+                }
+
+                currentProfile = profileName;
+                currentProfileSpan.textContent = `Profile: ${currentProfile}`;
+                localStorage.setItem('ltdAcct_lastProfile', currentProfile);
+                newProfileInput.value = '';
+                newProfileInput.style.display = 'none'; // Hide input after use
+                
+                loadData();
+                populateProfileDropdown(); // Re-populate in case we just added a new one
+                profileSelector.value = currentProfile; // Set dropdown to the one we just loaded
+                updateAllUI();
+            });
+
+            // NEW FUNCTION
+            function populateProfileDropdown() {
+                const profileNames = new Set();
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('ltdAcct_') && key.endsWith('_transactions')) {
+                        const profileName = key.substring(8, key.length - 13); // 8 is len('ltdAcct_'), 13 is len('_transactions')
+                        profileNames.add(profileName);
+                    }
+                }
+
+                const lastProfile = localStorage.getItem('ltdAcct_lastProfile');
+                const currentValue = profileSelector.value; // Store current value
+                
+                profileSelector.innerHTML = '<option value="new">--- Create New Profile ---</option>';
+                profileNames.forEach(name => {
+                    profileSelector.innerHTML += `<option value="${name}">${name}</option>`;
+                });
+                
+                // Try to set it back to what was selected, or the last profile
+                if (currentValue && profileNames.has(currentValue)) {
+                    profileSelector.value = currentValue;
+                } else if (lastProfile && profileNames.has(lastProfile)) {
+                    profileSelector.value = lastProfile;
+                } else if (profileNames.size > 0) {
+                     profileSelector.value = [...profileNames][0]; // default to first
+                } else {
+                    profileSelector.value = 'new';
+                }
+
+                // Show/hide the new profile input based on selection
+                if (profileSelector.value === 'new') {
+                    newProfileInput.style.display = 'block';
+                    loadProfileBtn.innerHTML = '<i class="fas fa-plus"></i> Create Profile';
+                } else {
+                    newProfileInput.style.display = 'none';
+                    loadProfileBtn.innerHTML = '<i class="fas fa-folder-open"></i> Load Profile';
+                }
+            }
+
+            // NEW EVENT LISTENER for the dropdown
+            profileSelector.addEventListener('change', () => {
+                if (profileSelector.value === 'new') {
+                    newProfileInput.style.display = 'block';
+                    newProfileInput.focus();
+                    loadProfileBtn.innerHTML = '<i class="fas fa-plus"></i> Create Profile';
+                } else {
+                    newProfileInput.style.display = 'none';
+                    loadProfileBtn.innerHTML = '<i class="fas fa-folder-open"></i> Load Profile';
+                }
+            });
+
+
+            function getStorageKey(key) {
+                return `ltdAcct_${currentProfile}_${key}`;
+            }
+
+            function loadData() {
+                if (!currentProfile) return;
+                db.transactions = JSON.parse(localStorage.getItem(getStorageKey('transactions'))) || [];
+                db.budgets = JSON.parse(localStorage.getItem(getStorageKey('budgets'))) || {};
+                db.customers = JSON.parse(localStorage.getItem(getStorageKey('customers'))) || [];
+                db.invoices = JSON.parse(localStorage.getItem(getStorageKey('invoices'))) || [];
+                db.assets = JSON.parse(localStorage.getItem(getStorageKey('assets'))) || [];
+                db.liabilities = JSON.parse(localStorage.getItem(getStorageKey('liabilities'))) || [];
+                db.comparativeReports = JSON.parse(localStorage.getItem(getStorageKey('comparativeReports'))) || []; // NEW
+            }
+
+            function saveData() {
+                if (!currentProfile) return;
+                try {
+                    localStorage.setItem(getStorageKey('transactions'), JSON.stringify(db.transactions));
+                    localStorage.setItem(getStorageKey('budgets'), JSON.stringify(db.budgets));
+                    localStorage.setItem(getStorageKey('customers'), JSON.stringify(db.customers));
+                    localStorage.setItem(getStorageKey('invoices'), JSON.stringify(db.invoices));
+                    localStorage.setItem(getStorageKey('assets'), JSON.stringify(db.assets));
+                    localStorage.setItem(getStorageKey('liabilities'), JSON.stringify(db.liabilities));
+                    localStorage.setItem(getStorageKey('comparativeReports'), JSON.stringify(db.comparativeReports)); // NEW
+                } catch (e) {
+                    console.error("Error saving to localStorage", e);
+                    alert("Error saving data. LocalStorage might be full.");
+                }
+            }
+
+            // --- INITIALIZATION ---
+            function init() {
+                // Populate category dropdowns
+                updateCategoryDropdown(transactionTypeSelect.value);
+                
+                const allCategories = [...CATEGORIES.Income, ...CATEGORIES.Expense];
+                budgetCategorySelect.innerHTML = allCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+
+                transactionTypeSelect.addEventListener('change', () => updateCategoryDropdown(transactionTypeSelect.value));
+                
+                // Set default transaction date
+                document.getElementById('transaction-date').valueAsDate = new Date();
+                document.getElementById('asset-date').valueAsDate = new Date();
+                document.getElementById('liability-date').valueAsDate = new Date();
+                document.getElementById('invoice-date').valueAsDate = new Date();
+                const defaultDueDate = new Date();
+                defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+                document.getElementById('invoice-due-date').valueAsDate = defaultDueDate;
+
+
+                // Setup tab navigation
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        // Deactivate all
+                        tabButtons.forEach(btn => btn.classList.remove('active'));
+                        tabContents.forEach(content => content.classList.remove('active'));
+
+                        // Activate clicked
+                        button.classList.add('active');
+                        document.getElementById(button.dataset.tab).classList.add('active');
+                    });
+                });
+
+                // Setup forms
+                transactionForm.addEventListener('submit', handleTransactionSubmit);
+                budgetForm.addEventListener('submit', handleBudgetSubmit);
+                customerForm.addEventListener('submit', handleCustomerSubmit);
+                invoiceForm.addEventListener('submit', handleInvoiceSubmit);
+                assetForm.addEventListener('submit', handleAssetSubmit);
+                liabilityForm.addEventListener('submit', handleLiabilitySubmit);
+                snapshotForm.addEventListener('submit', handleSnapshotSubmit); // NEW
+
+                // Setup print buttons
+                printPLBtn.addEventListener('click', () => printReport('pl_statement'));
+                printBalanceSheetBtn.addEventListener('click', () => printReport('balance_sheet'));
+                printSummaryBtn.addEventListener('click', () => printReport('year_end_summary'));
+
+                // Setup Import/Export
+                setupImportExport();
+
+                // Setup chart canvases
+                initCharts();
+                
+                // NEW: Populate profiles *before* trying to load one
+                populateProfileDropdown(); 
+
+                // Load default or last profile (if any)
+                const lastProfile = localStorage.getItem('ltdAcct_lastProfile');
+                // Check if lastProfile exists in the dropdown's options
+                if (lastProfile && profileSelector.querySelector(`option[value="${lastProfile}"]`)) {
+                    profileSelector.value = lastProfile;
+                    loadProfileBtn.click(); // Automatically load the last profile
+                } else if (profileSelector.options.length > 1) { 
+                    // if profiles exist but lastProfile isn't one, load the first one (skip "create new")
+                    profileSelector.selectedIndex = 1; 
+                    loadProfileBtn.click();
+                } else {
+                    // No profiles exist, just show the "create new" state
+                    updateAllUI();
+                }
+            }
+
+            function updateCategoryDropdown(type) {
+                transactionCategorySelect.innerHTML = CATEGORIES[type].map(cat => `<option value="${cat}">${cat}</option>`).join('');
+            }
+            
+            function updateCustomerDropdown() {
+                const customerOptions = db.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                invoiceCustomerSelect.innerHTML = `<option value="">-- Select Customer --</option>${customerOptions}`;
+            }
+
+            function initCharts() {
+                const ctxBudget = document.getElementById('budgetChart').getContext('2d');
+                budgetChart = new Chart(ctxBudget, {
+                    type: 'bar',
+                    data: { labels: [], datasets: [] },
+                    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+                });
+
+                const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+                revenueChart = new Chart(ctxRevenue, {
+                    type: 'doughnut',
+                    data: { labels: [], datasets: [] },
+                    options: { responsive: true, plugins: { legend: { position: 'top' } } }
+                });
+
+                const ctxOpex = document.getElementById('opexChart').getContext('2d');
+                opexChart = new Chart(ctxOpex, {
+                    type: 'pie',
+                    data: { labels: [], datasets: [] },
+                    options: { responsive: true, plugins: { legend: { position: 'top' } } }
+                });
+            }
+
+            // --- FORM HANDLERS ---
+            function handleTransactionSubmit(e) {
+                e.preventDefault();
+                const totalAmount = parseFloat(document.getElementById('transaction-amount').value);
+                const vatRate = parseFloat(document.getElementById('transaction-vat').value);
+                const netAmount = totalAmount / (1 + (vatRate / 100));
+                const vatAmount = totalAmount - netAmount;
+
+                const transaction = {
+                    id: Date.now().toString(),
+                    date: document.getElementById('transaction-date').value,
+                    type: document.getElementById('transaction-type').value,
+                    category: document.getElementById('transaction-category').value,
+                    description: document.getElementById('transaction-description').value,
+                    totalAmount: totalAmount,
+                    vatRate: vatRate,
+                    netAmount: netAmount,
+                    vatAmount: vatAmount
+                };
+
+                db.transactions.push(transaction);
+                saveData();
+                updateAllUI();
+                transactionForm.reset();
+                document.getElementById('transaction-date').valueAsDate = new Date();
+            }
+
+            function handleBudgetSubmit(e) {
+                e.preventDefault();
+                const category = document.getElementById('budget-category').value;
+                const amount = parseFloat(document.getElementById('budget-amount').value);
+                
+                const type = CATEGORIES.Income.includes(category) ? 'Income' : 'Expense';
+
+                db.budgets[category] = { amount, type };
+                saveData();
+                updateAllUI();
+                budgetForm.reset();
+            }
+            
+            function handleCustomerSubmit(e) {
+                e.preventDefault();
+                const customer = {
+                    id: Date.now().toString(),
+                    name: document.getElementById('customer-name').value,
+                    email: document.getElementById('customer-email').value,
+                    phone: document.getElementById('customer-phone').value
+                };
+                db.customers.push(customer);
+                saveData();
+                updateAllUI();
+                customerForm.reset();
+            }
+            
+            function handleInvoiceSubmit(e) {
+                e.preventDefault();
+                const invoice = {
+                    id: Date.now().toString(),
+                    customerId: document.getElementById('invoice-customer').value,
+                    number: document.getElementById('invoice-number').value,
+                    dateIssued: document.getElementById('invoice-date').value,
+                    dateDue: document.getElementById('invoice-due-date').value,
+                    amount: parseFloat(document.getElementById('invoice-amount').value),
+                    status: document.getElementById('invoice-status').value
+                };
+                db.invoices.push(invoice);
+                saveData();
+                updateAllUI();
+                invoiceForm.reset();
+                document.getElementById('invoice-date').valueAsDate = new Date();
+                const defaultDueDate = new Date();
+                defaultDueDate.setDate(defaultDueDate.getDate() + 30);
+                document.getElementById('invoice-due-date').valueAsDate = defaultDueDate;
+            }
+
+            function handleAssetSubmit(e) {
+                e.preventDefault();
+                const asset = {
+                    id: Date.now().toString(),
+                    name: document.getElementById('asset-name').value,
+                    type: document.getElementById('asset-type').value,
+                    date: document.getElementById('asset-date').value,
+                    value: parseFloat(document.getElementById('asset-value').value)
+                };
+                db.assets.push(asset);
+                saveData();
+                updateAllUI();
+                assetForm.reset();
+                document.getElementById('asset-date').valueAsDate = new Date();
+            }
+
+            function handleLiabilitySubmit(e) {
+                e.preventDefault();
+                const liability = {
+                    id: Date.now().toString(),
+                    name: document.getElementById('liability-name').value,
+                    type: document.getElementById('liability-type').value,
+                    date: document.getElementById('liability-date').value,
+                    amount: parseFloat(document.getElementById('liability-amount').value)
+                };
+                db.liabilities.push(liability);
+                saveData();
+                updateAllUI();
+                liabilityForm.reset();
+                document.getElementById('liability-date').valueAsDate = new Date();
+            }
+
+            // NEW: Handle Snapshot Submit
+            function handleSnapshotSubmit(e) {
+                e.preventDefault();
+                const year = document.getElementById('snapshot-year').value.trim();
+                if (!year) {
+                    alert('Please enter a financial year.');
+                    return;
+                }
+                
+                // Check if snapshot for this year already exists
+                if (db.comparativeReports.some(report => report.year === year)) {
+                    if (!confirm(`A snapshot for ${year} already exists. Do you want to overwrite it?`)) {
+                        return;
+                    }
+                    // Remove existing snapshot to replace it
+                    db.comparativeReports = db.comparativeReports.filter(report => report.year !== year);
+                }
+
+                // Get current financial summary
+                const summary = calculateFinancialSummary();
+
+                const snapshot = {
+                    id: Date.now().toString(),
+                    year: year,
+                    totalRevenue: summary.totalRevenue,
+                    netProfit: summary.netProfit,
+                    cashAtBank: summary.cashAtBank,
+                    totalAssets: summary.totalAssets,
+                    totalLiabilities: summary.totalLiabilities,
+                    totalEquity: summary.totalEquity
+                };
+
+                db.comparativeReports.push(snapshot);
+                saveData();
+                updateAllUI();
+                snapshotForm.reset();
+                alert(`Financial snapshot for ${year} has been saved successfully.`);
+            }
+
+
+            // --- UI RENDER FUNCTIONS ---
+            function updateAllUI() {
+                const emptyRow = (cols) => `<tr><td colspan="${cols}" style="text-align: center; color: #777; padding: 1rem;">No data entered.</td></tr>`;
+                if (!currentProfile) {
+                    // Render empty state for all tables
+                    transactionLogBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #777; padding: 1rem;">No profile loaded.</td></tr>`;
+                    budgetTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777; padding: 1rem;">No profile loaded.</td></tr>`;
+                    customerTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777; padding: 1rem;">No profile loaded.</td></tr>`;
+                    invoiceTableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #777; padding: 1rem;">No profile loaded.</td></tr>`;
+                    assetTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777; padding: 1rem;">No profile loaded.</td></tr>`;
+                    liabilityTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #777; padding: 1rem;">No profile loaded.</td></tr>`;
+                    comparativeTableBody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #777; padding: 1rem;">No profile loaded.</td></tr>`; // NEW
+                    
+                    // Reset KPIs and Charts
+                    const kpis = document.querySelectorAll('.kpi-value');
+                    kpis.forEach(kpi => kpi.textContent = '£0.00');
+                    if (budgetChart) { budgetChart.data.labels = []; budgetChart.data.datasets = []; budgetChart.update(); }
+                    if (revenueChart) { revenueChart.data.labels = []; revenueChart.data.datasets = []; revenueChart.update(); }
+                    if (opexChart) { opexChart.data.labels = []; opexChart.data.datasets = []; opexChart.update(); }
+                    // Reset reports
+                    plTableBody.innerHTML = '';
+                    balanceSheetBody.innerHTML = '';
+                    summaryArBody.innerHTML = emptyRow(4);
+                    document.getElementById('invoice-status-list').innerHTML = '';
+                    return;
+                };
+                
+                checkOverdueInvoices();
+                renderTransactionTable();
+                renderBudgetTable();
+                renderCustomerTable();
+                renderInvoiceTable();
+                renderAssetTable();
+                renderLiabilityTable();
+                renderComparativeTable(); // NEW
+                updateCustomerDropdown();
+                
+                // Calculations
+                const financialSummary = calculateFinancialSummary();
+                
+                // Update UI with new calculations
+                updateKPIs(financialSummary);
+                updateCharts(financialSummary);
+                renderPLStatement(financialSummary);
+                renderBalanceSheet(financialSummary);
+                renderAnnualSummary(financialSummary);
+            }
+            
+            function renderTable(tbody, data, columns, deleteCallback) {
+                tbody.innerHTML = '';
+                if (data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${columns.length + 1}" style="text-align: center; color: #777; padding: 1rem;">No data entered.</td></tr>`;
+                    return;
+                }
+                
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = columns.map(col => `<td>${col.render(item)}</td>`).join('') +
+                                    `<td><button class="delete-btn" data-id="${item.id}"><i class="fas fa-trash-alt"></i></button></td>`;
+                    tbody.appendChild(row);
+                });
+                
+                // Add delete listeners
+                tbody.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => deleteCallback(e.currentTarget.dataset.id));
+                });
+            }
+
+            function renderTransactionTable() {
+                const data = [...db.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+                const columns = [
+                    { render: (tx) => formatDate(tx.date) },
+                    { render: (tx) => `<span class="${tx.type === 'Income' ? 'text-green' : 'text-red'}">${tx.type}</span>` },
+                    { render: (tx) => tx.category },
+                    { render: (tx) => `<span style="font-size: 0.85rem;">${tx.description}</span>` },
+                    { render: (tx) => formatCurrency(tx.netAmount) },
+                    { render: (tx) => formatCurrency(tx.vatAmount) },
+                    { render: (tx) => `<span style="font-weight: 600;">${formatCurrency(tx.totalAmount)}</span>` },
+                ];
+                renderTable(transactionLogBody, data, columns, (id) => {
+                    db.transactions = db.transactions.filter(tx => tx.id !== id);
+                    saveData();
+                    updateAllUI();
+                });
+            }
+            
+            function renderBudgetTable() {
+                budgetTableBody.innerHTML = '';
+                const allCategories = [...CATEGORIES.Income, ...CATEGORIES.Expense];
+                if (allCategories.length === 0 && Object.keys(db.budgets).length === 0) {
+                     budgetTableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #777; padding: 1rem;">No data entered.</td></tr>`;
+                     return;
+                }
+                
+                allCategories.forEach(category => {
+                    const budget = db.budgets[category];
+                    const actual = db.transactions.filter(tx => tx.category === category).reduce((sum, tx) => sum + tx.netAmount, 0);
+                    const variance = (budget ? budget.amount : 0) - actual;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${category}</td>
+                        <td>${CATEGORIES.Income.includes(category) ? 'Income' : 'Expense'}</td>
+                        <td>${budget ? formatCurrency(budget.amount) : '£0.00'}</td>
+                        <td>${formatCurrency(actual)}</td>
+                        <td class="${variance >= 0 ? 'text-green' : 'text-red'}">${formatCurrency(variance)}</td>
+                        <td><button class="delete-btn" data-category="${category}"><i class="fas fa-trash-alt"></i></button></td>
+                    `;
+                    budgetTableBody.appendChild(row);
+                });
+                // Add delete listeners
+                budgetTableBody.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const category = e.currentTarget.dataset.category;
+                        delete db.budgets[category];
+                        saveData();
+                        updateAllUI();
+                    });
+                });
+            }
+
+            function renderCustomerTable() {
+                const data = [...db.customers].sort((a,b) => a.name.localeCompare(b.name));
+                const columns = [
+                    { render: (c) => `<span style="font-weight: 500;">${c.name}</span>` },
+                    { render: (c) => c.email },
+                    { render: (c) => c.phone },
+                    { render: (c) => formatCurrency(db.invoices.filter(inv => inv.customerId === c.id).reduce((sum, inv) => sum + inv.amount, 0)) }
+                ];
+                renderTable(customerTableBody, data, columns, (id) => {
+                    db.customers = db.customers.filter(c => c.id !== id);
+                    saveData();
+                    updateAllUI();
+                });
+            }
+
+            function renderInvoiceTable() {
+                const data = [...db.invoices].sort((a, b) => new Date(b.dateIssued) - new Date(a.dateIssued));
+                const columns = [
+                    { render: (inv) => `<span class="status-${inv.status.toLowerCase()}">${inv.status}</span>` },
+                    { render: (inv) => `<span style="font-weight: 500;">${inv.number}</span>` },
+                    { render: (inv) => db.customers.find(c => c.id === inv.customerId)?.name || 'Unknown' },
+                    { render: (inv) => formatDate(inv.dateIssued) },
+                    { render: (inv) => formatDate(inv.dateDue) },
+                    { render: (inv) => formatCurrency(inv.amount) }
+                ];
+                renderTable(invoiceTableBody, data, columns, (id) => {
+                    db.invoices = db.invoices.filter(inv => inv.id !== id);
+                    saveData();
+                    updateAllUI();
+                });
+            }
+            
+            function renderAssetTable() {
+                const data = [...db.assets].sort((a,b) => a.name.localeCompare(b.name));
+                const columns = [
+                    { render: (a) => `<span style="font-weight: 500;">${a.name}</span>` },
+                    { render: (a) => a.type },
+                    { render: (a) => formatDate(a.date) },
+                    { render: (a) => formatCurrency(a.value) }
+                ];
+                renderTable(assetTableBody, data, columns, (id) => {
+                    db.assets = db.assets.filter(a => a.id !== id);
+                    saveData();
+                    updateAllUI();
+                });
+            }
+            
+            function renderLiabilityTable() {
+                const data = [...db.liabilities].sort((a,b) => a.name.localeCompare(b.name));
+                const columns = [
+                    { render: (l) => `<span style="font-weight: 500;">${l.name}</span>` },
+                    { render: (l) => l.type },
+                    { render: (l) => formatDate(l.date) },
+                    { render: (l) => formatCurrency(l.amount) }
+                ];
+                renderTable(liabilityTableBody, data, columns, (id) => {
+                    db.liabilities = db.liabilities.filter(l => l.id !== id);
+                    saveData();
+                    updateAllUI();
+                });
+            }
+
+            // NEW: Render Comparative Table
+            function renderComparativeTable() {
+                const data = [...db.comparativeReports].sort((a, b) => a.year.localeCompare(b.year));
+                const columns = [
+                    { render: (r) => `<span style="font-weight: 600;">${r.year}</span>` },
+                    { render: (r) => formatCurrency(r.totalRevenue) },
+                    { render: (r) => `<span class="${r.netProfit >= 0 ? 'text-green' : 'text-red'}">${formatCurrency(r.netProfit)}</span>` },
+                    { render: (r) => formatCurrency(r.cashAtBank) },
+                    { render: (r) => formatCurrency(r.totalAssets) },
+                    { render: (r) => formatCurrency(r.totalLiabilities) },
+                    { render: (r) => formatCurrency(r.totalEquity) }
+                ];
+                renderTable(comparativeTableBody, data, columns, (id) => {
+                    db.comparativeReports = db.comparativeReports.filter(r => r.id !== id);
+                    saveData();
+                    updateAllUI();
+                });
+            }
+
+
+            function checkOverdueInvoices() {
+                const today = new Date().toISOString().split('T')[0];
+                let changed = false;
+                db.invoices.forEach(inv => {
+                    if (inv.status === 'Pending' && inv.dateDue < today) {
+                        inv.status = 'Overdue';
+                        changed = true;
+                    }
+                });
+                if (changed) saveData();
+            }
+
+            // --- CALCULATIONS & KPI UPDATES ---
+            
+            function calculateCategoryTotal(category) {
+                return db.transactions.filter(tx => tx.category === category).reduce((sum, tx) => sum + tx.netAmount, 0);
+            }
+
+            function calculateFinancialSummary() {
+                const summary = {};
+
+                // P&L Calculations
+                summary.totalRevenue = PNL_STRUCTURE.Revenue.reduce((sum, cat) => sum + calculateCategoryTotal(cat), 0);
+                summary.totalCOGS = calculateCategoryTotal(PNL_STRUCTURE['Cost of Goods Sold (COGS)'][0]);
+                summary.grossProfit = summary.totalRevenue - summary.totalCOGS;
+                summary.totalOpex = PNL_STRUCTURE['Operating Expenses'].reduce((sum, cat) => sum + calculateCategoryTotal(cat), 0);
+                summary.operatingProfit = summary.grossProfit - summary.totalOpex;
+                summary.otherIncome = PNL_STRUCTURE['Other Income/Expense'].reduce((sum, cat) => sum + calculateCategoryTotal(cat), 0);
+                summary.netProfit = summary.operatingProfit + summary.otherIncome;
+
+                // Cash Calculations
+                const totalIncome = db.transactions.filter(tx => tx.type === 'Income').reduce((sum, tx) => sum + tx.totalAmount, 0);
+                const totalExpense = db.transactions.filter(tx => tx.type === 'Expense').reduce((sum, tx) => sum + tx.totalAmount, 0);
+                summary.cashAtBank = totalIncome - totalExpense;
+                
+                // VAT Calculations
+                summary.vatIn = db.transactions.filter(tx => tx.type === 'Expense').reduce((sum, tx) => sum + tx.vatAmount, 0);
+                summary.vatOut = db.transactions.filter(tx => tx.type === 'Income').reduce((sum, tx) => sum + tx.vatAmount, 0);
+                summary.vatDue = summary.vatOut - summary.vatIn;
+
+                // Invoice Calculations
+                summary.accountsReceivable = db.invoices.filter(inv => inv.status === 'Pending' || inv.status === 'Overdue').reduce((sum, inv) => sum + inv.amount, 0);
+                summary.overdueInvoices = db.invoices.filter(inv => inv.status === 'Overdue').reduce((sum, inv) => sum + inv.amount, 0);
+                
+                // Balance Sheet Calculations
+                summary.totalFixedAssets = db.assets.filter(a => a.type === 'Fixed Asset').reduce((sum, a) => sum + a.value, 0);
+                summary.totalStock = db.assets.filter(a => a.type === 'Stock').reduce((sum, a) => sum + a.value, 0);
+                summary.totalCurrentAssets = summary.cashAtBank + summary.accountsReceivable + summary.totalStock;
+                summary.totalAssets = summary.totalCurrentAssets + summary.totalFixedAssets;
+                
+                summary.totalLoans = db.liabilities.filter(l => l.type === 'Liability').reduce((sum, l) => sum + l.amount, 0);
+                summary.totalShareCapital = db.liabilities.filter(l => l.type === 'Equity').reduce((sum, l) => sum + l.amount, 0);
+                // Current Liabilities = VAT Due + other short term loans (simplified)
+                summary.totalCurrentLiabilities = summary.vatDue > 0 ? summary.vatDue : 0; // Only add VAT if it's a liability (owed)
+                summary.totalLiabilities = summary.totalCurrentLiabilities + summary.totalLoans;
+                summary.retainedEarnings = summary.netProfit; // Simplified (assumes no prior year earnings)
+                summary.totalEquity = summary.totalShareCapital + summary.retainedEarnings;
+                summary.totalLiabilitiesAndEquity = summary.totalLiabilities + summary.totalEquity;
+                
+                summary.balancingCheck = summary.totalAssets - summary.totalLiabilitiesAndEquity;
+
+                return summary;
+            }
+
+            function updateKPIs(summary) {
+                kpiTotalRevenue.textContent = formatCurrency(summary.totalRevenue);
+                kpiTotalOpex.textContent = formatCurrency(summary.totalOpex);
+                kpiNetProfit.textContent = formatCurrency(summary.netProfit);
+                kpiNetProfit.className = `kpi-value ${summary.netProfit >= 0 ? 'positive' : 'negative'}`;
+                kpiCashAtBank.textContent = formatCurrency(summary.cashAtBank);
+                kpiVatDue.textContent = formatCurrency(summary.vatDue);
+                kpiAccountsReceivable.textContent = formatCurrency(summary.accountsReceivable);
+                kpiOverdueInvoices.textContent = formatCurrency(summary.overdueInvoices);
+                kpiTotalAssets.textContent = formatCurrency(summary.totalAssets);
+                
+                // Update dashboard invoice status list
+                const invoiceStatusList = document.getElementById('invoice-status-list');
+                const paid = db.invoices.filter(inv => inv.status === 'Paid').reduce((sum, inv) => sum + inv.amount, 0);
+                const pending = db.invoices.filter(inv => inv.status === 'Pending').reduce((sum, inv) => sum + inv.amount, 0);
+                invoiceStatusList.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #DFFFDF; border-radius: 6px;">
+                        <span style="font-weight: 500; color: #006400;">Paid</span>
+                        <span style="font-weight: 700; color: #006400;">${formatCurrency(paid)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #FFFAF0; border-radius: 6px;">
+                        <span style="font-weight: 500; color: #B8860B;">Pending</span>
+                        <span style="font-weight: 700; color: #B8860B;">${formatCurrency(pending)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: #FFD2D2; border-radius: 6px;">
+                        <span style="font-weight: 500; color: #D22B2B;">Overdue</span>
+                        <span style="font-weight: 700; color: #D22B2B;">${formatCurrency(summary.overdueInvoices)}</span>
+                    </div>
+                `;
+            }
+
+            // --- CHART UPDATES ---
+            function updateCharts(summary) {
+                // Budget Chart
+                const budgetLabels = Object.keys(db.budgets);
+                const budgetData = budgetLabels.map(cat => db.budgets[cat].amount);
+                const actualData = budgetLabels.map(cat => {
+                    return db.transactions.filter(tx => tx.category === cat).reduce((sum, tx) => sum + tx.netAmount, 0);
+                });
+
+                budgetChart.data.labels = budgetLabels;
+                budgetChart.data.datasets = [
+                    { label: 'Budget', data: budgetData, backgroundColor: 'rgba(0, 0, 128, 0.6)' }, /* Navy */
+                    { label: 'Actual', data: actualData, backgroundColor: 'rgba(210, 43, 43, 0.6)' } /* Red */
+                ];
+                budgetChart.update();
+
+                // Revenue Chart
+                const revenueLabels = PNL_STRUCTURE.Revenue;
+                const revenueData = revenueLabels.map(cat => calculateCategoryTotal(cat));
+                revenueChart.data.labels = revenueLabels.filter((_, i) => revenueData[i] > 0);
+                revenueChart.data.datasets = [{
+                    data: revenueData.filter(d => d > 0),
+                    backgroundColor: ['#008000', '#2E8B57', '#3CB371'] /* Greens */
+                }];
+                revenueChart.update();
+
+                // OpEx Chart
+                const opexLabels = PNL_STRUCTURE['Operating Expenses'];
+                const opexData = opexLabels.map(cat => calculateCategoryTotal(cat));
+                opexChart.data.labels = opexLabels.filter((_, i) => opexData[i] > 0);
+                opexChart.data.datasets = [{
+                    data: opexData.filter(d => d > 0),
+                    backgroundColor: ['#D22B2B', '#DC143C', '#FF4500', '#FF6347', '#FF7F50', '#B22222', '#CD5C5C'] /* Reds */
+                }];
+                opexChart.update();
+            }
+
+            // --- REPORT GENERATION ---
+            function renderPLStatement(summary) {
+                plTableBody.innerHTML = '';
+                
+                let html = `<tr class="section-header"><td colspan="2">Revenue</td></tr>`;
+                PNL_STRUCTURE.Revenue.forEach(cat => {
+                    const total = calculateCategoryTotal(cat);
+                    html += `<tr class="sub-item"><td>${cat}</td><td>${formatCurrency(total)}</td></tr>`;
+                });
+                html += `<tr class="total-row"><td>Total Revenue</td><td>${formatCurrency(summary.totalRevenue)}</td></tr>`;
+                
+                html += `<tr class="total-row"><td>Cost of Goods Sold (COGS)</td><td>(${formatCurrency(summary.totalCOGS)})</td></tr>`;
+                html += `<tr class="grand-total"><td>Gross Profit</td><td>${formatCurrency(summary.grossProfit)}</td></tr>`;
+                
+                html += `<tr class="section-header"><td colspan="2">Operating Expenses</td></tr>`;
+                PNL_STRUCTURE['Operating Expenses'].forEach(cat => {
+                    const total = calculateCategoryTotal(cat);
+                    html += `<tr class="sub-item"><td>${cat}</td><td>(${formatCurrency(total)})</td></tr>`;
+                });
+                html += `<tr class="total-row"><td>Total Operating Expenses</td><td>(${formatCurrency(summary.totalOpex)})</td></tr>`;
+
+                html += `<tr class="grand-total"><td>Operating Profit</td><td>${formatCurrency(summary.operatingProfit)}</td></tr>`;
+
+                html += `<tr class="section-header"><td colspan="2">Other Income / Expense</td></tr>`;
+                PNL_STRUCTURE['Other Income/Expense'].forEach(cat => {
+                    const total = calculateCategoryTotal(cat);
+                    html += `<tr class="sub-item"><td>${cat}</td><td>${formatCurrency(total)}</td></tr>`;
+                });
+
+                html += `<tr class="grand-total"><td>NET PROFIT</td><td class="${summary.netProfit >= 0 ? 'text-green' : 'text-red'}">${formatCurrency(summary.netProfit)}</td></tr>`;
+                
+                plTableBody.innerHTML = html;
+            }
+            
+            function renderBalanceSheet(summary) {
+                balanceSheetBody.innerHTML = '';
+                document.getElementById('balance-sheet-date').textContent = `As at: ${new Date().toLocaleDateString('en-GB')}`;
+                
+                let html = `<tr class="section-header"><td colspan="2">ASSETS</td></tr>`;
+                html += `<tr class="section-header sub-item"><td colspan="2">Current Assets</td></tr>`;
+                html += `<tr class="sub-item"><td>Cash at Bank</td><td>${formatCurrency(summary.cashAtBank)}</td></tr>`;
+                html += `<tr class="sub-item"><td>Accounts Receivable</td><td>${formatCurrency(summary.accountsReceivable)}</td></tr>`;
+                html += `<tr class="sub-item"><td>Stock</td><td>${formatCurrency(summary.totalStock)}</td></tr>`;
+                html += `<tr class="total-row"><td>Total Current Assets</td><td>${formatCurrency(summary.totalCurrentAssets)}</td></tr>`;
+                
+                html += `<tr class="section-header sub-item"><td colspan="2">Fixed Assets</td></tr>`;
+                db.assets.filter(a => a.type === 'Fixed Asset').forEach(a => {
+                    html += `<tr class="sub-item"><td>${a.name}</td><td>${formatCurrency(a.value)}</td></tr>`;
+                });
+                html += `<tr class="total-row"><td>Total Fixed Assets</td><td>${formatCurrency(summary.totalFixedAssets)}</td></tr>`;
+                
+                html += `<tr class="grand-total"><td>TOTAL ASSETS</td><td>${formatCurrency(summary.totalAssets)}</td></tr>`;
+                
+                html += `<tr class="section-header"><td colspan="2">LIABILITIES & EQUITY</td></tr>`;
+                html += `<tr class="section-header sub-item"><td colspan="2">Current Liabilities</td></tr>`;
+                html += `<tr class="sub-item"><td>VAT Due to HMRC</td><td>${formatCurrency(summary.totalCurrentLiabilities)}</td></tr>`; // Based on new calc
+                // Add other current liabilities if tracked
+                html += `<tr class="total-row"><td>Total Current Liabilities</td><td>${formatCurrency(summary.totalCurrentLiabilities)}</td></tr>`;
+                
+                html += `<tr class="section-header sub-item"><td colspan="2">Non-Current Liabilities</td></tr>`;
+                db.liabilities.filter(l => l.type === 'Liability').forEach(l => {
+                    html += `<tr class="sub-item"><td>${l.name}</td><td>${formatCurrency(l.amount)}</td></tr>`;
+                });
+                html += `<tr class="total-row"><td>Total Non-Current Liabilities</td><td>${formatCurrency(summary.totalLoans)}</td></tr>`;
+                
+                html += `<tr class="total-row"><td>TOTAL LIABILITIES</td><td>${formatCurrency(summary.totalLiabilities)}</td></tr>`;
+                
+                html += `<tr class="section-header sub-item"><td colspan="2">Equity</td></tr>`;
+                 db.liabilities.filter(l => l.type === 'Equity').forEach(l => {
+                    html += `<tr class="sub-item"><td>${l.name}</td><td>${formatCurrency(l.amount)}</td></tr>`;
+                });
+                html += `<tr class="sub-item"><td>Retained Earnings (Current Year Net Profit)</td><td>${formatCurrency(summary.retainedEarnings)}</td></tr>`;
+                html += `<tr class="total-row"><td>TOTAL EQUITY</td><td>${formatCurrency(summary.totalEquity)}</td></tr>`;
+                
+                html += `<tr class="grand-total"><td>TOTAL LIABILITIES & EQUITY</td><td>${formatCurrency(summary.totalLiabilitiesAndEquity)}</td></tr>`;
+                
+                // Balancing Check
+                const balanceClass = Math.abs(summary.balancingCheck) < 0.01 ? 'balancing-check-ok' : 'balancing-check-fail';
+                const balanceText = Math.abs(summary.balancingCheck) < 0.01 ? 'Balance Sheet is BALANCED' : `Does NOT Balance (Difference: ${formatCurrency(summary.balancingCheck)})`;
+                html += `<tr><td colspan="2" class="${balanceClass}">${balanceText}</td></tr>`;
+                
+                balanceSheetBody.innerHTML = html;
+            }
+
+
+            function renderAnnualSummary(summary) {
+                // KPIs
+                summaryNetProfit.textContent = formatCurrency(summary.netProfit);
+                summaryNetProfit.className = `kpi-value ${summary.netProfit >= 0 ? 'positive text-green' : 'negative text-red'}`;
+                summaryCashAtBank.textContent = formatCurrency(summary.cashAtBank);
+                summaryTotalRevenue.textContent = formatCurrency(summary.totalRevenue);
+                summaryTotalOpex.textContent = formatCurrency(summary.totalOpex);
+                summaryVatPaid.textContent = formatCurrency(summary.vatIn);
+                summaryVatReceived.textContent = formatCurrency(summary.vatOut);
+
+                // A/R Table
+                summaryArBody.innerHTML = '';
+                let totalAR = 0;
+                const unpaidInvoices = db.invoices.filter(inv => inv.status === 'Pending' || inv.status === 'Overdue');
+                unpaidInvoices.sort((a, b) => new Date(a.dateDue) - new Date(a.dateDue));
+                
+                unpaidInvoices.forEach(inv => {
+                    const customer = db.customers.find(c => c.id === inv.customerId);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${inv.number}</td>
+                        <td>${customer ? customer.name : 'Unknown'}</td>
+                        <td class="${inv.status === 'Overdue' ? 'text-red' : ''}">${formatDate(inv.dateDue)}</td>
+                        <td>${formatCurrency(inv.amount)}</td>
+                    `;
+                    summaryArBody.appendChild(row);
+                    totalAR += inv.amount;
+                });
+                
+                if (unpaidInvoices.length === 0) {
+                    summaryArBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777; padding: 1rem;">No unpaid invoices.</td></tr>`;
+                }
+                summaryTotalAr.textContent = formatCurrency(totalAR);
+            }
+
+            // --- PRINTING ---
+            function printReport(tabId) {
+                const printContents = document.getElementById(tabId).innerHTML;
+                
+                const printWindow = window.open('', '_blank', 'height=800,width=800');
+                
+                printWindow.document.write('<html><head><title>Print Report</title>');
+                
+                // Manually write our simplified, reliable styles
+                printWindow.document.write(`
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                        body { margin: 20px; font-family: 'Inter', sans-serif; font-size: 10pt; color: #333; }
+                        .no-print { display: none !important; }
+                        .print-container { box-shadow: none; border: none; padding: 0; }
+                        .print-title { display: block !important; text-align: center; font-size: 20pt; font-weight: bold; margin-bottom: 25px; }
+                        table { width: 100%; border-collapse: collapse; font-size: 10pt; }
+                        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+                        table, tr, td, th { page-break-inside: avoid !important; }
+                        h2, h3 { page-break-after: avoid; page-break-inside: avoid; }
+                        
+                        .report-table .section-header {
+                            background-color: #0000CD !important; /* Medium Blue */
+                            color: #ffffff !important;
+                            font-weight: bold;
+                        }
+                        .report-table .section-header.sub-item {
+                            background-color: #4169E1 !important; /* Royal Blue */
+                        }
+                        .report-table .sub-item { padding-left: 2rem !important; }
+                        .report-table .total-row {
+                            font-weight: bold; background-color: #f9f9f9 !important; border-top: 2px solid #ccc !important;
+                        }
+                        .report-table .grand-total {
+                            font-weight: 800; font-size: 1.1rem; background-color: #E6E6FA !important; border-top: 3px solid #0000CD !important;
+                        }
+                        .text-green { color: #008000 !important; }
+                        .text-red { color: #D22B2B !important; }
+                        .balancing-check-ok { background-color: #DFFFDF !important; color: #006400 !important; text-align: center; font-weight: 700; padding: 1rem; }
+                        .balancing-check-fail { background-color: #FFD2D2 !important; color: #D22B2B !important; text-align: center; font-weight: 700; padding: 1rem; }
+                    </style>
+                `);
+
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(printContents);
+                printWindow.document.write('</body></html>');
+                
+                printWindow.document.close();
+                
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    printWindow.close();
+                }, 500); 
+            }
+
+            // --- IMPORT / EXPORT ---
+            function setupImportExport() {
+                exportTransactionsBtn.addEventListener('click', () => exportToCSV('transactions.csv', db.transactions));
+                exportBudgetsBtn.addEventListener('click', () => {
+                    const budgetArray = Object.keys(db.budgets).map(key => ({ category: key, amount: db.budgets[key].amount, type: db.budgets[key].type }));
+                    exportToCSV('budgets.csv', budgetArray);
+                });
+                exportCustomersBtn.addEventListener('click', () => exportToCSV('customers.csv', db.customers));
+                exportInvoicesBtn.addEventListener('click', () => exportToCSV('invoices.csv', db.invoices));
+                exportAssetsBtn.addEventListener('click', () => exportToCSV('assets.csv', db.assets));
+                exportLiabilitiesBtn.addEventListener('click', () => exportToCSV('liabilities.csv', db.liabilities));
+                exportComparativeBtn.addEventListener('click', () => exportToCSV('comparative_reports.csv', db.comparativeReports)); // NEW
+
+                importTransactionsBtn.addEventListener('change', (e) => importFromCSV(e, (data) => {
+                    db.transactions = [...db.transactions, ...data.map(row => ({
+                        ...row,
+                        totalAmount: parseFloat(row.totalAmount || 0),
+                        vatRate: parseFloat(row.vatRate || 0),
+                        netAmount: parseFloat(row.netAmount || 0),
+                        vatAmount: parseFloat(row.vatAmount || 0),
+                    }))];
+                    saveData();
+                    updateAllUI();
+                }));
+                importBudgetsBtn.addEventListener('change', (e) => importFromCSV(e, (data) => {
+                    data.forEach(row => {
+                        if(row.category) db.budgets[row.category] = { amount: parseFloat(row.amount || 0), type: row.type };
+                    });
+                    saveData();
+                    updateAllUI();
+                }));
+                importCustomersBtn.addEventListener('change', (e) => importFromCSV(e, (data) => {
+                    db.customers = [...db.customers, ...data.filter(row => row.name)];
+                    saveData();
+                    updateAllUI();
+                }));
+                importInvoicesBtn.addEventListener('change', (e) => importFromCSV(e, (data) => {
+                    db.invoices = [...db.invoices, ...data.map(row => ({
+                        ...row,
+                        amount: parseFloat(row.amount || 0),
+                    })).filter(row => row.number)];
+                    saveData();
+                    updateAllUI();
+                }));
+                importAssetsBtn.addEventListener('change', (e) => importFromCSV(e, (data) => {
+                    db.assets = [...db.assets, ...data.map(row => ({
+                        ...row,
+                        value: parseFloat(row.value || 0),
+                    })).filter(row => row.name)];
+                    saveData();
+                    updateAllUI();
+                }));
+                importLiabilitiesBtn.addEventListener('change', (e) => importFromCSV(e, (data) => {
+                    db.liabilities = [...db.liabilities, ...data.map(row => ({
+                        ...row,
+                        amount: parseFloat(row.amount || 0),
+                    })).filter(row => row.name)];
+                    saveData();
+                    updateAllUI();
+S                }));
+                // Note: No import for comparative reports, as it's a snapshot-only feature.
+            }
+
+            function exportToCSV(filename, data) {
+                if (data.length === 0) {
+                    alert('No data to export.');
+                    return;
+                }
+                const headers = Object.keys(data[0]);
+                const csvRows = [
+                    headers.join(','),
+                    ...data.map(row => 
+                        headers.map(header => 
+                            JSON.stringify(row[header], (key, value) => (value === null || value === undefined) ? '' : value)
+                        ).join(',')
+                    )
+                ];
+                
+                const csvContent = csvRows.join('\n');
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            function importFromCSV(event, callback) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    const rows = text.split(/[\r\n]+/).filter(row => row.trim() !== ''); // More robust row splitting
+                    if (rows.length < 2) {
+                        alert('CSV file is empty or has no data.');
+                        return;
+                    }
+
+                    const headers = rows[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                    const data = rows.slice(1).map(row => {
+                        // Basic CSV parsing to handle commas inside quotes
+                        const values = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.trim().replace(/"/g, ''));
+                        return headers.reduce((obj, header, index) => {
+                            obj[header] = values[index];
+                            return obj;
+                        }, {});
+                    });
+                    callback(data);
+                };
+                reader.readAsText(file);
+                event.target.value = null; // Clear input
+            }
+
+            // --- START THE APP ---
+            init();
+        });
+    </script>
+</body>
+</html>
+
